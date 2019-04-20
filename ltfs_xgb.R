@@ -1,4 +1,3 @@
-library(tidyverse)
 # Установка библиотек
 install.packages('tidyverse')
 install.packages('caret')
@@ -45,7 +44,8 @@ feat_engin <- function(df) {
            sec_act_tot_ratio = SEC.ACTIVE.ACCTS/(SEC.NO.OF.ACCTS+1),
            sec_over_tot_ratio = SEC.OVERDUE.ACCTS/(SEC.NO.OF.ACCTS+1)
     ) %>% 
-    select(-birthdate, -event, -Date.of.Birth, -DisbursalDate)
+    select(-birthdate, -event, -Date.of.Birth, -DisbursalDate, 
+           -MobileNo_Avl_Flag)
 }
 
 
@@ -197,4 +197,4 @@ xgb_model <- train(
 valpred <- predict(xgb_model, val_dm)
 sub <- bind_cols(list(val_ids$UniqueID), list(valpred))
 colnames(sub) <- c("UniqueID", "loan_default")
-write_csv(sub, "as_sub_v12.csv")
+write_csv(sub, "as_sub_v13.csv")
