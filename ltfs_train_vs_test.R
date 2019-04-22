@@ -1,5 +1,5 @@
 # Модель для сравнения train & test для поиска ликов
-df <- read_csv("train.csv") %>% 
+tr <- read_csv("train.csv") %>% 
   select(-UniqueID, -loan_default) %>% 
   mutate_if(is.character, as.factor)
 
@@ -7,11 +7,9 @@ val <- read_csv("test_bqCt9Pv.csv") %>%
   select(-UniqueID) %>% 
   mutate_if(is.character, as.factor)
 
-df <- bind_rows("1" = df, "0" = val, .id = "target") %>% 
+df <- bind_rows("1" = tr, "0" = val, .id = "target") %>% 
   mutate_if(is.character, as.factor) %>% 
   feat_engin()
-
-glimpse(df)
 
 smp_size <- floor(0.7 * NROW(df))
 set.seed(699)
@@ -43,13 +41,15 @@ test_dm <- xgb.DMatrix(test_smm,
                        label = as.numeric(as.character(test_lab)), 
                        missing = NA)
 
+watchlist = list(train = train_dm, test = test_dm)
+
 xgb_cv <- xgb.cv(data = train_dm,
                  objective = "binary:logistic",
                  metrics = "auc",
                  nround = 2000,
                  eta = 0.2,
                  early_stopping_rounds = 15,
-                 nthread = 40,
+                 #nthread = 40,
                  nfold = 10,
                  print_every_n = 50,
                  max_depth = 3,
@@ -66,9 +66,11 @@ nround <- xgb_cv$best_ntreelimit
 lal_fit <- xgb.train(data = train_dm,
                      objective = "binary:logistic",
                      metrics = "auc",
-                     nround = 1300,
+                     #watchlist = watchlist,
+                     nround = nround,
                      eta = 0.2,
-                     nthread = 8,
+                     #early_stopping_rounds = 15,
+                     #nthread = 8,
                      nfold = 10,
                      max_depth = 3,
                      subsample = 1,
@@ -87,16 +89,16 @@ lal_rocr <- ROCR::prediction(lal_pred, test$target)
 lal_auc <- ROCR::performance(lal_rocr, 'auc')
 lal_auc@y.values[[1]] # AUC
 
+lal_fi <- xgb.importance(model = lal_fit)
+xgb.plot.importance(importance_matrix = lal_fi[1:20], main = "Feature Importance")
+View(lal_fi[1:20])
+
 lal_roc <- ROCR::performance(lal_rocr, measure = 'tpr', x.measure = 'fpr')
 plot(lal_roc, main = "ROC")
 abline(a = 0, b = 1)
 
 lal_precrec <- ROCR::performance(lal_rocr, 'prec', x.measure = 'rec')
 plot(lal_precrec, main = 'Precision & Recall', colorize = TRUE)
-
-lal_fi <- xgb.importance(model = lal_fit)
-xgb.plot.importance(importance_matrix = lal_fi[1:20], main = "Feature Importance")
-View(lal_fi[1:20])
 
 lal_senspec <- performance(lal_rocr, measure = 'sens', x.measure = 'spec')
 plot(lal_senspec, main = 'Sensitivity & Specificity', colorize = TRUE)

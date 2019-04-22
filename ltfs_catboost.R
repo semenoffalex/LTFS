@@ -84,10 +84,10 @@ model <- catboost.train(train_pool,  NULL,
 
 prediction <- catboost.predict(model, 
                                real_pool,
-                               prediction_type = "Class")
+                               prediction_type = "Probability")
 sub <- bind_cols(list(val_ids), list(prediction))
 colnames(sub) <- c("UniqueID", "loan_default")
-write_csv(sub, "as_sub_v10.csv")
+write_csv(sub, "as_sub_v19.csv")
 
 
 # Tuning in caret ---------------------------------------------------------
@@ -109,13 +109,14 @@ model <- train(new_features,
                preProc = NULL,
                tuneGrid = grid, 
                trControl = fit_control,
-               metric = 'Kappa')
+               metric = 'AUC')
 
 print(model)
 
 importance <- varImp(model, scale = FALSE)
 print(importance)
-prd <- predict(model, newdata = new_val, type = 'raw')
+prd <- predict(model, newdata = new_val)
+foo <- predict.xgb.Booster(model, newdata = new_val)
 prediction <- ifelse(as.numeric(prd)==1,0,1)
 sub <- bind_cols(list(val_ids), list(prediction))
 colnames(sub) <- c("UniqueID", "loan_default")
