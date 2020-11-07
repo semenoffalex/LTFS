@@ -36,8 +36,6 @@ val_ids <- read_csv("test_bqCt9Pv.csv") %>%
 df <- feat_engin(df)
 val <- feat_engin(val)
 
-glimpse(df)
-
 smp_size <- floor(0.7 * NROW(df))
 set.seed(699)
 train_ind <- sample(seq_len(nrow(df)), size = smp_size)
