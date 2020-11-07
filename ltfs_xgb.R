@@ -12,6 +12,8 @@ library(ROCR)
 library(caret)
 library(lubridate)
 
+# Вот так работает гит
+
 source("ltfs_helper_functions.R")
 
 # Helper Functions --------------------------------------------------------
@@ -33,6 +35,8 @@ val_ids <- read_csv("test_bqCt9Pv.csv") %>%
 
 df <- feat_engin(df)
 val <- feat_engin(val)
+
+glimpse(df)
 
 smp_size <- floor(0.7 * NROW(df))
 set.seed(699)
